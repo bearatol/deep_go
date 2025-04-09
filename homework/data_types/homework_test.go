@@ -34,7 +34,16 @@ func toLittleEndian[T ConvertionTypes](number T) (res T) {
 	return
 }
 
+func toLittleEndian32(number uint32) uint32 {
+	W := byte(number >> 24)
+	X := byte(number >> 16)
+	Y := byte(number >> 8)
+	Z := byte(number)
+	return uint32(W) | uint32(X)<<8 | uint32(Y)<<16 | uint32(Z)<<24
+}
+
 func ToLittleEndian(number uint32) uint32 {
+	//return toLittleEndian32(number)
 	return toLittleEndian(number)
 }
 
