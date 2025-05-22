@@ -11,85 +11,85 @@ import (
 type Option func(*GamePerson)
 
 func WithName(name string) func(*GamePerson) {
-	return func(person *GamePerson) {
-		n := copy(person.name[:], name)
-		for i := n; i < len(person.name); i++ {
-			person.name[i] = 0
+	return func(p *GamePerson) {
+		n := copy(p.name[:], name)
+		for i := n; i < len(p.name); i++ {
+			p.name[i] = 0
 		}
 	}
 }
 
 func WithCoordinates(x, y, z int) func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.x = int32(x)
-		person.y = int32(y)
-		person.z = int32(z)
+	return func(p *GamePerson) {
+		*(*int32)(unsafe.Pointer(&p.position[0])) = int32(x)
+		*(*int32)(unsafe.Pointer(&p.position[4])) = int32(y)
+		*(*int32)(unsafe.Pointer(&p.position[8])) = int32(z)
 	}
 }
 
 func WithGold(gold int) func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.gold = uint32(gold)
+	return func(p *GamePerson) {
+		*(*uint32)(unsafe.Pointer(&p.gold)) = uint32(gold)
 	}
 }
 
 func WithMana(mana int) func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.mana = uint16(mana)
+	return func(p *GamePerson) {
+		*(*uint16)(unsafe.Pointer(&p.manaHealth[0])) = uint16(mana)
 	}
 }
 
 func WithHealth(health int) func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.health = uint16(health)
+	return func(p *GamePerson) {
+		*(*uint16)(unsafe.Pointer(&p.manaHealth[0])) = uint16(health)
 	}
 }
 
 func WithRespect(respect int) func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.stats = (person.stats &^ respectMask) | (uint32(respect) << respectShift)
+	return func(p *GamePerson) {
+		p.respect[0] = uint8(respect)
 	}
 }
 
 func WithStrength(strength int) func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.stats = (person.stats &^ strengthMask) | (uint32(strength) << strengthShift)
+	return func(p *GamePerson) {
+		p.strength[0] = uint8(strength)
 	}
 }
 
 func WithExperience(experience int) func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.stats = (person.stats &^ experienceMask) | (uint32(experience) << experienceShift)
+	return func(p *GamePerson) {
+		p.expLevel[0] = (p.expLevel[0] & 0xF0) | uint8(experience)&15
 	}
 }
 
 func WithLevel(level int) func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.stats = (person.stats &^ levelMask) | (uint32(level) << levelShift)
+	return func(p *GamePerson) {
+		p.expLevel[0] = (p.expLevel[0] & 15) | (uint8(level) << 4)
 	}
 }
 
 func WithHouse() func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.isHouseGunFamily |= hasHouseBit
+	return func(p *GamePerson) {
+		p.flags[0] |= 1 << 0
 	}
 }
 
 func WithGun() func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.isHouseGunFamily |= hasGunBit
+	return func(p *GamePerson) {
+		p.flags[0] |= 1 << 1
 	}
 }
 
 func WithFamily() func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.isHouseGunFamily |= hasFamilyBit
+	return func(p *GamePerson) {
+		p.flags[0] |= 1 << 2
 	}
 }
 
 func WithType(personType int) func(*GamePerson) {
-	return func(person *GamePerson) {
-		person.personType = uint8(personType)
+	return func(p *GamePerson) {
+		p.flags[0] = (p.flags[0] &^ 24) | (byte(personType) << 3)
 	}
 }
 
@@ -99,37 +99,15 @@ const (
 	WarriorGamePersonType
 )
 
-const (
-	experienceShift = 24
-	respectShift    = 16
-	strengthShift   = 8
-	levelShift      = 0
-
-	experienceMask = 0xFF << experienceShift
-	respectMask    = 0xFF << respectShift
-	strengthMask   = 0xFF << strengthShift
-	levelMask      = 0xFF << levelShift
-
-	hasHouseBit  = 1 << 0
-	hasGunBit    = 1 << 1
-	hasFamilyBit = 1 << 2
-)
-
 type GamePerson struct {
-	name [42]byte
-
-	x int32
-	y int32
-	z int32
-
-	gold  uint32
-	stats uint32
-
-	mana   uint16
-	health uint16
-
-	personType       uint8
-	isHouseGunFamily uint8
+	name       [42]byte
+	position   [12]byte
+	gold       [4]byte
+	manaHealth [2]byte
+	respect    [1]byte
+	strength   [1]byte
+	expLevel   [1]byte
+	flags      [1]byte // hasHouse(1), hasGun(1), hasFamily(1), type(2)
 }
 
 func NewGamePerson(options ...Option) *GamePerson {
@@ -149,59 +127,59 @@ func (p *GamePerson) Name() string {
 }
 
 func (p *GamePerson) X() int {
-	return int(p.x)
+	return int(*(*int32)(unsafe.Pointer(&p.position[0])))
 }
 
 func (p *GamePerson) Y() int {
-	return int(p.y)
+	return int(*(*int32)(unsafe.Pointer(&p.position[4])))
 }
 
 func (p *GamePerson) Z() int {
-	return int(p.z)
+	return int(*(*int32)(unsafe.Pointer(&p.position[8])))
 }
 
 func (p *GamePerson) Gold() int {
-	return int(p.gold)
+	return int(*(*uint32)(unsafe.Pointer(&p.gold)))
 }
 
 func (p *GamePerson) Mana() int {
-	return int(p.mana)
+	return int(*(*uint16)(unsafe.Pointer(&p.manaHealth[0])))
 }
 
 func (p *GamePerson) Health() int {
-	return int(p.health)
+	return int(*(*uint16)(unsafe.Pointer(&p.manaHealth[0])))
 }
 
 func (p *GamePerson) Respect() int {
-	return int((p.stats & respectMask) >> respectShift)
+	return int(p.respect[0])
 }
 
 func (p *GamePerson) Strength() int {
-	return int((p.stats & strengthMask) >> strengthShift)
+	return int(p.strength[0])
 }
 
 func (p *GamePerson) Experience() int {
-	return int((p.stats & experienceMask) >> experienceShift)
+	return int(p.expLevel[0] & 15)
 }
 
 func (p *GamePerson) Level() int {
-	return int((p.stats & levelMask) >> levelShift)
+	return int((p.expLevel[0] >> 4) & 15)
 }
 
 func (p *GamePerson) HasHouse() bool {
-	return p.isHouseGunFamily&hasHouseBit != 0
+	return p.flags[0]&(1<<0) != 0
 }
 
 func (p *GamePerson) HasGun() bool {
-	return p.isHouseGunFamily&hasGunBit != 0
+	return p.flags[0]&(1<<1) != 0
 }
 
 func (p *GamePerson) HasFamilty() bool {
-	return p.isHouseGunFamily&hasFamilyBit != 0
+	return p.flags[0]&(1<<2) != 0
 }
 
 func (p *GamePerson) Type() int {
-	return int(p.personType)
+	return int((p.flags[0] & 24) >> 3)
 }
 
 func TestGamePerson(t *testing.T) {
