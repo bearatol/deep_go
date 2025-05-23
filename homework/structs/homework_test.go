@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"math"
 	"testing"
 	"unsafe"
@@ -21,9 +23,11 @@ func WithName(name string) func(*GamePerson) {
 
 func WithCoordinates(x, y, z int) func(*GamePerson) {
 	return func(p *GamePerson) {
-		*(*int32)(unsafe.Pointer(&p.position[0])) = int32(x)
-		*(*int32)(unsafe.Pointer(&p.position[4])) = int32(y)
-		*(*int32)(unsafe.Pointer(&p.position[8])) = int32(z)
+		buf := new(bytes.Buffer)
+		binary.Write(buf, binary.LittleEndian, int32(x))
+		binary.Write(buf, binary.LittleEndian, int32(y))
+		binary.Write(buf, binary.LittleEndian, int32(z))
+		p.position = [12]byte(buf.Bytes())
 	}
 }
 
