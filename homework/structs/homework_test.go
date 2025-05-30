@@ -232,3 +232,18 @@ func TestGamePerson(t *testing.T) {
 	assert.False(t, person.HasGun())
 	assert.Equal(t, personType, person.Type())
 }
+
+func TestGamePerson1(t *testing.T) {
+	type GamePerson struct {
+		X, Y, Z int32    // 12: X + Y + Z
+		Gold    uint32   // 4: золото
+		Extras  uint16   // 2: мана + здоровье
+		Stats   uint16   // 2: уважение + сила + опыт + уровень
+		Flags   uint8    // 1: дом, оружие, семья
+		Type    uint8    // 1: тип игрока
+		Name    [42]byte // 42: имя
+		//если использовать типы go, то так лезет
+	}
+
+	assert.LessOrEqual(t, unsafe.Sizeof(GamePerson{}), uintptr(64))
+}
