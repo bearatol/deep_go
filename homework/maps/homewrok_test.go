@@ -49,42 +49,41 @@ func (m *OrderedMap) insert(node *Node, key, value int) *Node {
 }
 
 func (m *OrderedMap) Erase(key int) {
-	var deleted bool
-	m.root, deleted = deleteNode(m.root, key)
-	if deleted {
-		m.size--
+	if !m.Contains(key) {
+		return
 	}
+	m.root = deleteNode(m.root, key)
+	m.size--
 }
 
-func deleteNode(node *Node, key int) (*Node, bool) {
+func deleteNode(node *Node, key int) *Node {
 	if node == nil {
-		return nil, false
+		return nil
 	}
-	var deleted bool
+
 	if key < node.key {
-		left, del := deleteNode(node.left, key)
-		node.left = left
-		deleted = del
-		return node, deleted
+		node.left = deleteNode(node.left, key)
+		return node
 	}
+
 	if key > node.key {
-		right, del := deleteNode(node.right, key)
-		node.right = right
-		deleted = del
-		return node, deleted
+		node.right = deleteNode(node.right, key)
+		return node
 	}
+
 	if node.left == nil {
-		return node.right, true
+		return node.right
 	}
+
 	if node.right == nil {
-		return node.left, true
+		return node.left
 	}
 
 	minRight := findMin(node.right)
 	node.key = minRight.key
 	node.value = minRight.value
-	node.right, deleted = deleteNode(node.right, minRight.key)
-	return node, deleted
+	node.right = deleteNode(node.right, minRight.key)
+	return node
 }
 
 func findMin(node *Node) *Node {
