@@ -12,8 +12,8 @@ func Map(data []int, action func(int) int) []int {
 		return nil
 	}
 	result := []int{}
-	for i, value := range data {
-		result[i] = action(value)
+	for _, value := range data {
+		result = append(result, action(value))
 	}
 	return result
 }
