@@ -8,7 +8,7 @@ import (
 )
 
 func Map(data []int, action func(int) int) []int {
-	if data == nil {
+	if len(data) == 0 {
 		return nil
 	}
 	result := make([]int, len(data))
