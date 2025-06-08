@@ -15,6 +15,9 @@ type MultiError struct {
 }
 
 func (e *MultiError) Error() string {
+	if len(e.Errors) == 0 {
+		return ""
+	}
 	str := fmt.Sprintf("%d errors occured:\n", len(e.Errors))
 	for _, v := range e.Errors {
 		str += "\t* " + v.Error()
