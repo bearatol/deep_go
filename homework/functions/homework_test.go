@@ -8,10 +8,10 @@ import (
 )
 
 func Map(data []int, action func(int) int) []int {
-	if len(data) == 0 {
+	if data == nil {
 		return nil
 	}
-	result := make([]int, len(data))
+	result := []int{}
 	for i, value := range data {
 		result[i] = action(value)
 	}
