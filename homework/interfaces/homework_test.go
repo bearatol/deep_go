@@ -37,7 +37,12 @@ func (c *Container) Resolve(name string) (interface{}, error) {
 	if !ok {
 		return nil, errors.New("type is not exist")
 	}
-	return typeVal.(func() any)(), nil
+
+	function, ok := typeVal.(func() any)
+	if !ok {
+		return nil, errors.New("invalid function type")
+	}
+	return function(), nil
 }
 
 func TestDIContainer(t *testing.T) {
